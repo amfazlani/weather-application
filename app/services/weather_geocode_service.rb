@@ -4,6 +4,7 @@ class WeatherGeocodeService
   attr_reader :query, :data
 
   EXPIRATION_FOR_CACHE = 30.minute.freeze
+  API_SECRET = ENV['OPEN_WEATHER_API_KEY']
 
   def initialize(options={})
     @query = options[:query]
@@ -19,7 +20,7 @@ class WeatherGeocodeService
     cache_key = "weather_data_#{query}"
 
     weather_data = Rails.cache.fetch(cache_key, expires_in: EXPIRATION_FOR_CACHE) do
-      begin
+      begin        
         data_from_zipcode = handle_response(find_by_zipcode)
         data_from_name = handle_response(find_by_name)
       rescue StandardError => exception
@@ -36,7 +37,7 @@ class WeatherGeocodeService
   def find_by_zipcode
     # api documentation can be found at https://openweathermap.org/api/geocoding-api
 
-    uri = URI("http://api.openweathermap.org/geo/1.0/zip?zip=#{query}&limit=1&appid=#{ENV['OPEN_WEATHER_API_KEY']}")
+    uri = URI("http://api.openweathermap.org/geo/1.0/zip?zip=#{query}&limit=1&appid=#{API_SECRET}")
 
     Net::HTTP.get_response(uri)
   end
@@ -44,7 +45,7 @@ class WeatherGeocodeService
   def find_by_name
     # api documentation can be found at https://openweathermap.org/api/geocoding-api
 
-    uri = URI("http://api.openweathermap.org/geo/1.0/direct?q=#{query}&limit=1&appid=#{ENV['OPEN_WEATHER_API_KEY']}")
+    uri = URI("http://api.openweathermap.org/geo/1.0/direct?q=#{query}&limit=1&appid=#{API_SECRET}")
 
     Net::HTTP.get_response(uri)
   end
