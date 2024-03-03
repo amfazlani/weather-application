@@ -50,7 +50,7 @@ function getData() {
       }
     }
   }).catch((error) => {
-    console.log(error)
+    window.showErrorToast(error)
   });
 }
 
@@ -96,8 +96,8 @@ function fetchWeatherData(element) {
     </div>`
 
     $('#weather-cards').append(element)
-  }).catch(()=>{
-    console.log(error)
+  }).catch((error)=>{
+    window.showErrorToast(error)
   });
 }
 
