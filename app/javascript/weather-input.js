@@ -1,6 +1,5 @@
 import { Toast } from 'bootstrap'
 
-
 $( document ).on('turbolinks:load', function() {
   var debouncedFunction = debounce(function() {
     getData()
