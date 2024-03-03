@@ -1,12 +1,12 @@
 # This service is responsible for converting an address to lat/lon coordinates.
 
 class WeatherGeocodeService
-  attr_reader :city, :state, :zipcode, :data
+  attr_reader :query, :data
+
+  EXPIRATION_FOR_CACHE = 30.minute.freeze
 
   def initialize(options={})
-    @city = options[:city]
-    @state = options[:state]
-    @zipcode = options[:zipcode]
+    @query = options[:query]
   end
 
   def perform
@@ -16,38 +16,54 @@ class WeatherGeocodeService
   private
 
   def fetch_coordinates
-    begin
-      response = fetch_coordinate_data
+    cache_key = "weather_data_#{query}"
 
-      case response
-      when Net::HTTPSuccess
-        parsed_response = JSON.parse(response.body).flatten.pop
-      when Net::HTTPUnauthorized # specifcally check for invalid authorization
-        # log exception to error loggger (ie. Rollbar, etc) in production environment.
-        # For right now raise api key error message.
+    weather_data = Rails.cache.fetch(cache_key, expires_in: EXPIRATION_FOR_CACHE) do
+      begin
+        data_from_zipcode = handle_response(find_by_zipcode)
+        data_from_name = handle_response(find_by_name)
+      rescue StandardError => exception
+        # log exception to error loggger (ie. Rollbar, etc) in a production environment.
+        # For right now raise exception
 
-        raise 'Invalid API Key'
-      else 
-        # handle other Net:HTTP errors outisde of authorization
-        # log exception to error loggger (ie. Rollbar, etc) in production environment.
-
-        raise JSON.parse(response.body)
+        raise exception
       end
-    rescue StandardError => exception
-      # log exception to error loggger (ie. Rollbar, etc) in a production environment.
-      # For right now raise exception
 
-      raise exception
+      @data = data_from_zipcode || data_from_name.flatten
     end
-
-    @data = parsed_response # returnes hash of coordinates or nil object
   end
 
-  def fetch_coordinate_data
+  def find_by_zipcode
     # api documentation can be found at https://openweathermap.org/api/geocoding-api
 
-    uri = URI("http://api.openweathermap.org/geo/1.0/direct?q=#{city}, #{state}, #{zipcode}&limit=1&appid=#{ENV['OPEN_WEATHER_API_KEY']}")
+    uri = URI("http://api.openweathermap.org/geo/1.0/zip?zip=#{query}&limit=1&appid=#{ENV['OPEN_WEATHER_API_KEY']}")
 
     Net::HTTP.get_response(uri)
+  end
+
+  def find_by_name
+    # api documentation can be found at https://openweathermap.org/api/geocoding-api
+
+    uri = URI("http://api.openweathermap.org/geo/1.0/direct?q=#{query}&limit=1&appid=#{ENV['OPEN_WEATHER_API_KEY']}")
+
+    Net::HTTP.get_response(uri)
+  end
+
+  def handle_response(response)
+    case response
+    when Net::HTTPSuccess
+      return JSON.parse(response.body)
+    when Net::HTTPUnauthorized # specifcally check for invalid authorization
+      # log exception to error loggger (ie. Rollbar, etc) in production environment.
+      # For right now raise api key error message.
+
+      raise 'Invalid API Key'
+    when Net::HTTPNotFound
+      # handle other Net:HTTP errors outisde of authorization
+      # log exception to error loggger (ie. Rollbar, etc) in production environment.
+      return nil
+    else
+       raise JSON.parse(response.body)['message']
+    end
   end
 end

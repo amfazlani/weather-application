@@ -3,6 +3,8 @@
 class WeatherKitService
   attr_reader :lat, :lon, :data, :icon
 
+  EXPIRATION_FOR_CACHE = 30.minutes.freeze
+
   def initialize(lat, lon)
     @lat = lat
     @lon = lon
@@ -22,36 +24,34 @@ class WeatherKitService
 
   def fetch_weather_data
     begin
-      response = fetch_from_api
+      cache_key = "weather_data_#{lat.to_s}_#{lon.to_s}"
 
-      case response
-      when Net::HTTPSuccess
-        parsed_response = JSON.parse(response.body)
-      when Net::HTTPUnauthorized # specifcally check for invalid authorization
-        # log exception to error loggger (ie. Rollbar, etc) in production environment.
-        # For right now raise api key error message.
+      weather_data = Rails.cache.fetch(cache_key, expires_in: EXPIRATION_FOR_CACHE) do
+        # api documentation can be found at https://openweathermap.org/api/geocoding-api
 
-        raise 'Invalid API Key'
-      else 
-        # handle other Net:HTTP errors outisde of authorization
-        # log exception to error loggger (ie. Rollbar, etc) in production environment.
-        raise JSON.parse(response.body)['message']
+        uri = URI("https://api.openweathermap.org/data/2.5/weather?lat=#{lat}&lon=#{lon}&appid=#{ENV['OPEN_WEATHER_API_KEY']}&units=imperial")
+
+        response = Net::HTTP.get_response(uri)
+
+        case response
+        when Net::HTTPSuccess
+           @data = JSON.parse(response.body)
+        when Net::HTTPUnauthorized # specifcally check for invalid authorization
+          # log exception to error loggger (ie. Rollbar, etc) in production environment.
+          # For right now raise api key error message.
+
+          raise 'Invalid API Key'
+        else 
+          # handle other Net:HTTP errors outisde of authorization
+          # log exception to error loggger (ie. Rollbar, etc) in production environment.
+          raise JSON.parse(response)['message']
+        end
+      rescue StandardError => exception
+        # log exception to error loggger (ie. Rollbar, etc) in a production environment.
+        # For right now raise exception
+
+        raise exception
       end
-    rescue StandardError => exception
-      # log exception to error loggger (ie. Rollbar, etc) in a production environment.
-      # For right now raise exception
-
-      raise exception
     end
-
-    @data = parsed_response # returnes hash of coordinates or nil object
-  end
-
-  def fetch_from_api
-    # api documentation can be found at https://openweathermap.org/api/geocoding-api
-
-    uri = URI("https://api.openweathermap.org/data/2.5/weather?lat=#{lat}&lon=-#{lon}&appid=#{ENV['OPEN_WEATHER_API_KEY']}&units=imperial")
-
-    Net::HTTP.get_response(uri)
   end
 end
