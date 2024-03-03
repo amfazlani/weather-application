@@ -16,6 +16,8 @@ $( document ).on('turbolinks:load', function() {
   var toastList = toastElList.map(function (toastEl) {
     return new Toast(toastEl, {})
   })
+
+  window.showErrorToast = showErrorToast;
 })
 
 function getData() {
@@ -29,25 +31,28 @@ function getData() {
           'Accept': 'application/json',
       },
   }).then(response => response.json()).then(json => {
-    if (Array.isArray(json)) {
-      for (let i = 0; i < json.length; i++) {
+    if (json['errors']) {
+      window.showErrorToast(json['errors'])
+    } else {
+      if (Array.isArray(json)) {
+        for (let i = 0; i < json.length; i++) {
+          let element = `<div class="card-body">
+          Location: <h5 class="card-title" data-lat=${json[i].lat} data-lon=${json[i].lon}>${json[i].name}</h5>
+          </div>`
+
+          element = $('#found-locations').append(element)
+        }
+      } else {
         let element = `<div class="card-body">
-        Location: <h5 class="card-title" data-lat=${json[i].lat} data-lon=${json[i].lon}>${json[i].name}</h5>
+        Location: <h5 class="card-title" data-lat=${json.lat} data-lon=${json.lon}>${json.name}</h5>
         </div>`
 
-        element = $('#found-locations').append(element)
+        $('#found-locations').append(element)
       }
-    } else {
-      let element = `<div class="card-body">
-      Location: <h5 class="card-title" data-lat=${json.lat} data-lon=${json.lon}>${json.name}</h5>
-      </div>`
-
-      $('#found-locations').append(element)
     }
   }).catch((error) => {
     console.log(error)
   });
-
 }
 
 function debounce(func, wait, immediate) {
@@ -95,4 +100,16 @@ function fetchWeatherData(element) {
   }).catch(()=>{
     console.log(error)
   });
+}
+
+function showErrorToast(error) {
+  let toastEl = $('.toast')[0]
+
+  let element = $('#weather-error-toaster-body')[0]
+
+  element.innerHTML = error
+
+  let toastInstance = Toast.getInstance(toastEl) // Returns a Bootstrap toast instance
+
+  toastInstance.show();
 }

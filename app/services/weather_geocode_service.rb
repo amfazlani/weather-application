@@ -63,7 +63,7 @@ class WeatherGeocodeService
       # log exception to error loggger (ie. Rollbar, etc) in production environment.
       return nil
     else
-       raise JSON.parse(response.body)['message']
+       raise OpenWeatherError.new(JSON.parse(response.body)['message'])
     end
   end
 end

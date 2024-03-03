@@ -44,13 +44,13 @@ class WeatherKitService
         else 
           # handle other Net:HTTP errors outisde of authorization
           # log exception to error loggger (ie. Rollbar, etc) in production environment.
-          raise JSON.parse(response)['message']
+          raise OpenWeatherError.new(JSON.parse(response)['message'])
         end
       rescue StandardError => exception
         # log exception to error loggger (ie. Rollbar, etc) in a production environment.
         # For right now raise exception
 
-        raise exception
+        raise OpenWeatherError.new(exception.message)
       end
     end
   end
