@@ -1,41 +1,34 @@
-# This service is responsible for fetching weather data by lat/lon coordinates
+# This service is responsible for converting a city name to lat/lon coordinates.
 
-class WeatherKitService
-  attr_reader :lat, :lon, :data, :icon
+class WeatherGeocodeCityService
+  attr_reader :query, :data
 
-  EXPIRATION_FOR_CACHE = 30.minutes.freeze
+  EXPIRATION_FOR_CACHE = 30.minute.freeze
   API_SECRET = ENV['OPEN_WEATHER_API_KEY'].freeze
 
-  def initialize(lat, lon)
-    @lat = lat
-    @lon = lon
+  def initialize(options={})
+    @query = options[:query]
   end
 
   def perform
-    fetch_weather_data
+    fetch_coordinates
   rescue StandardError => exception
     raise OpenWeatherError.new(exception.message)
   end
 
-  def icon_url
-    return unless data && data['weather']
-
-    @icon ||= "http://openweathermap.org/img/w/#{data['weather'].pop['icon']}.png"
-  end
-
   private
 
-  def fetch_weather_data
-    cache_key = !Rails.env.test? ? "weather_data_#{lat.to_s}_#{lon.to_s}" : Time.now.to_i
+  def fetch_coordinates
+    cache_key = !Rails.env.test? ? "weather_data_city_#{query}" : Time.now.to_i
 
     @data = Rails.cache.fetch(cache_key, expires_in: EXPIRATION_FOR_CACHE) do
-      response = handle_response(find_by_coordinates)
+      response = handle_response(find_by_city)
 
-      response.merge('expires_at' => time_to_expiration)
+      response.map { |x| x.merge('expires_at' => time_to_expiration) }
     end
   end
 
-  def find_by_coordinates
+  def find_by_city
     # api documentation can be found at https://openweathermap.org/api/geocoding-api
 
     Net::HTTP.get_response(api_url)
@@ -44,25 +37,26 @@ class WeatherKitService
   def handle_response(response)
     case response
     when Net::HTTPSuccess
-       JSON.parse(response.body)
+      return JSON.parse(response.body).uniq {|cord| cord['name']}
     when Net::HTTPUnauthorized # specifcally check for invalid authorization
       # log exception to error loggger (ie. Rollbar, etc) in production environment.
       # For right now raise api key error message.
 
-      raise OpenWeatherError.new('Invalid API Key')
+       raise OpenWeatherError.new('Invalid API Key')
     when Net::HTTPNotFound
       # log exception to error loggger (ie. Rollbar, etc) in production environment.
+      # For right now raise not found error message.
 
       raise OpenWeatherError.new('Not Found')
-    else 
-      # log exception to error loggger (ie. Rollbar, etc) in production environment.
+    else
+      # handle other Net:HTTP errors outisde of authorization
 
       raise OpenWeatherError.new(JSON.parse(response.body)['message'])
     end
   end
 
   def api_url
-    URI("https://api.openweathermap.org/data/2.5/weather?lat=#{lat}&lon=#{lon}&appid=#{API_SECRET}&units=imperial")
+    URI("http://api.openweathermap.org/geo/1.0/direct?q=#{query}&limit=10&appid=#{API_SECRET}")
   end
 
   def time_to_expiration

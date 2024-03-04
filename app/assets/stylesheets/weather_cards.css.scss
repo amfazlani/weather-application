@@ -1,9 +1,117 @@
 #weather-info {
-  #found-locations {
-    .card-title {
-      color: blue;
-      text-decoration: underline;
-      cursor: pointer;
+  .card-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .location.card {
+    border-radius: 20px;
+    background-color: #6495ED;
+    color: #ffffff;
+    padding: 20px;
+    height: 100%;
+
+    .fa-solid {
+      font-weight: 900;
+      font-size: 4em;
+      text-align: center;
+      color: #ffffff;
+    }
+
+    .card-body {
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+
+      .card-title {
+        font-size: 28px;
+        margin-bottom: 20px;
+      }
+
+      .location-title {
+        background-color: orange;
+      }
+    }
+  }
+
+  #weather-cards {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
+    .weather-card {
+      padding: 20px;
+      width: 37em;
+      border-radius: 16px;
+      background: #d3d3d338;
+
+      .main-body {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+      }
+
+      .weather-icon {
+        width: 100px;
+        border-radius: 28px;
+        height: 100px;
+        background: lightblue;
+      }
+
+      .card-title {
+        font-size: 48px;
+        color: #808080;
+      }
+
+      .card-body {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+      }
+
+      .weather-subdata {
+        .title {
+          font-weight: bold;
+          font-size: 20px;
+          margin-right: 5px;
+        }
+
+        .value {
+          font-size: 24px;
+          display: inline;
+        }
+      }
+    }
+  }
+
+  .cache-text {
+    font-size: 13px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 980px) {
+  #weather-info {
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .card-container {
+      display: flex;
+      justify-content: center;
+    }
+
+    .location.card {
+      margin-bottom: 15px;
+    }
+
+    .weather-card {
+      .card-body {
+        flex-direction: column;
+      }
     }
   }
 }
