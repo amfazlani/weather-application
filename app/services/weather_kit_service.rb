@@ -1,4 +1,4 @@
-# This service is responsible for converting an address to lat/lon coordinates.
+# This service is responsible for fetching weather data by lat/lon coordinates
 
 class WeatherKitService
   attr_reader :lat, :lon, :data, :icon

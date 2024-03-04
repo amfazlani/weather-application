@@ -1,4 +1,4 @@
-# This service is responsible for converting an address to lat/lon coordinates.
+# This service is responsible for converting a zipcode to lat/lon coordinates.
 
 class WeatherGeocodeZipcodeService
   attr_reader :query, :data
