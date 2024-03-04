@@ -3,19 +3,6 @@ body > .container {
   background-color: white;
 }
 
-/*
- * Responsive stypes
- */
-@media (max-width: 980px) {
-
-  body > .container {
-    padding-top: 0;
-  }
-  .navbar-fixed-top {
-    margin-bottom: 0;
-  }
-}
-
 .toast-error {
   background: #FF0000;
   color: #FFFFFF;

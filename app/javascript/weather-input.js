@@ -73,7 +73,8 @@ function fetchWeatherData(element) {
   }).then(response => response.json()).then(json => {
     $('#weather-cards').empty()
 
-    element = `<div class="card weather-card">
+    element = `<div class="card-container col-sm-12 col-md-3 mb-2">
+    <div class="card weather-card">
     <img src=${json['icon']} alt="weather icon" class="weather-icon">
     <div class="card-body">
       <h5 class="card-title">${json['data'].main['temp']} °F</h5>
@@ -146,7 +147,7 @@ function constructLocationElement(json) {
             <div class="card location" style="width: 18rem;">
               <i class="fa-solid fa-location-dot"></i>
               <div class="card-body">
-                <h5 class="card-title">${json.name}, ${json.state}, ${json.country}</h5>
+                <h5 class="card-title">${[json.name, json.state, json.country].join(', ')}</h5>
                 <button class="btn btn-primary location-title" data-lat=${json.lat} data-lon=${json.lon}>View Forcast Data</button>
               </div>
             </div>
