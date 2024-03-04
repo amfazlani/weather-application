@@ -173,7 +173,7 @@ function constructLocationElement(json) {
               <i class="fa-solid fa-location-dot"></i>
               <div class="card-body">
                 <h5 class="card-title">${[json.name, json.state, json.country].filter(e => e).join(', ')}</h5>
-                <button class="btn btn-primary location-title" data-lat=${json.lat} data-lon=${json.lon}>View Forcast Data</button>
+                <button class="btn btn-primary location-title" data-lat=${json.lat} data-lon=${json.lon}>View Weather Data</button>
               </div>
               <p class="cache-text"> Cached: Expires at ${new Date(json.expires_at)} </p>
             </div>
