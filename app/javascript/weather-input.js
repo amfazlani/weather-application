@@ -1,11 +1,21 @@
 import { Toast } from 'bootstrap'
 
 $( document ).on('turbolinks:load', function() {
-  var debouncedFunction = debounce(function() {
-    getData()
+  let debouncedFunction = debounce(function() {
+    let url;
+    let query = $(this).val()
+
+    if ($(this).attr('id') == 'inputlg-zip') {
+      url = '/weather?zip=' + encodeURIComponent(query);
+    } else {
+      url = '/weather?city=' + encodeURIComponent(query);
+    }
+
+    getData(url, query)
   }, 500);
 
-  $('#inputlg').keydown(debouncedFunction); // This is the line you want!
+  $('#inputlg-zip').keydown(debouncedFunction);
+  $('#inputlg-city').keydown(debouncedFunction);
 
    $(document).on('click', '.card-title', function() {
     fetchWeatherData(this)
@@ -19,10 +29,7 @@ $( document ).on('turbolinks:load', function() {
   window.showErrorToast = showErrorToast;
 })
 
-function getData() {
-  let query = $('#inputlg').val()
-
-  var url = '/weather?q=' + encodeURIComponent(query);
+function getData(url, query) {
 
   fetch(url, {
       method: 'GET',
@@ -30,7 +37,7 @@ function getData() {
           'Accept': 'application/json',
       },
   }).then(response => response.json()).then(json => {
-    if (json['errors']) {
+    if (json && json['errors']) {
       window.showErrorToast(json['errors'])
     } else {
       if (Array.isArray(json)) {
@@ -49,8 +56,8 @@ function getData() {
         $('#found-locations').append(element)
       }
     }
-  }).catch((error) => {
-    window.showErrorToast(error)
+  }).catch(() => {
+    window.showErrorToast('Oops something went wrong!')
   });
 }
 

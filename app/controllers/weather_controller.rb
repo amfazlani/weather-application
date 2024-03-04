@@ -1,14 +1,12 @@
 class WeatherController < ApplicationController
   def index
-    weather_geocode_service = WeatherGeocodeService.new({query: params[:q]})
-
-    weather_geocode_service.perform
+    weather_geocode_zipcode_service.perform
 
     respond_to do |format|
 
       format.html # show.html.erb
 
-      format.json { render json: weather_geocode_service.data }
+      format.json { render json: weather_geocode_zipcode_service.data, status: 200 }
     end
   end
 
@@ -19,7 +17,17 @@ class WeatherController < ApplicationController
 
       format.html # show.html.erb
 
-      format.json { render json: data }
+      format.json { render json: data, status: 200 }
+    end
+  end
+
+  private
+
+  def weather_geocode_zipcode_service
+    if params[:zip]
+      @weather_geocode_service ||= WeatherGeocodeZipcodeService.new({query: params[:zip]})
+    else
+      @weather_geocode_service ||= WeatherGeocodeCityService.new({query: params[:city]})
     end
   end
 end
