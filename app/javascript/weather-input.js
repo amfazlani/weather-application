@@ -1,30 +1,9 @@
 import { Toast } from 'bootstrap'
 
 $( document ).on('turbolinks:load', function() {
-  let debouncedFunction = debounce(function() {
-    let url;
-    let query = $(this).val()
-
-    if ($(this).attr('id') == 'inputlg-zip') {
-      url = '/weather?zip=' + encodeURIComponent(query);
-    } else {
-      url = '/weather?city=' + encodeURIComponent(query);
-    }
-
-    getData(url, query)
-  }, 500);
-
-  $('#inputlg-zip').keydown(debouncedFunction);
-  $('#inputlg-city').keydown(debouncedFunction);
-
-   $(document).on('click', '.card-title', function() {
-    fetchWeatherData(this)
-  });
-
-  var toastElList = [].slice.call(document.querySelectorAll('.toast'))
-  var toastList = toastElList.map(function (toastEl) {
-    return new Toast(toastEl, {})
-  })
+  initializeToasts();
+  setLocationListener();
+  setKeydownListeners(debounce(fetchLocationData, 500));
 
   window.showErrorToast = showErrorToast;
 })
@@ -45,14 +24,14 @@ function getData(url, query) {
       if (Array.isArray(json)) {
         for (let i = 0; i < json.length; i++) {
           let element = `<div class="card-body">
-          Location: <h5 class="card-title" data-lat=${json[i].lat} data-lon=${json[i].lon}>${json[i].name}</h5>
+          Location: <h5 class="card-title location-title" data-lat=${json[i].lat} data-lon=${json[i].lon}>${json[i].name}</h5>
           </div>`
 
           element = $('#found-locations').append(element)
         }
       } else {
         let element = `<div class="card-body">
-        Location: <h5 class="card-title" data-lat=${json.lat} data-lon=${json.lon}>${json.name}</h5>
+        Location: <h5 class="card-title location-title" data-lat=${json.lat} data-lon=${json.lon}>${json.name}</h5>
         </div>`
 
         $('#found-locations').append(element)
@@ -110,11 +89,42 @@ function fetchWeatherData(element) {
 }
 
 function showErrorToast(error) {
-  let toastEl = $('.toast')[0]
-  let element = $('#weather-error-toaster-body')[0]
-  let toastInstance = Toast.getInstance(toastEl) // Returns a Bootstrap toast instance
+  let toastEl = $('.toast')[0];
+  let element = $('#weather-error-toaster-body')[0];
+  let toastInstance = Toast.getInstance(toastEl); // Returns a Bootstrap toast instance
 
   element.innerHTML = error
 
   toastInstance.show();
+}
+
+function initializeToasts() {
+  let toastElList = [].slice.call(document.querySelectorAll('.toast'))
+  let toastList = toastElList.map(function (toastEl) {
+    return new Toast(toastEl, {})
+  })
+}
+
+function fetchLocationData() {
+  let url;
+  let query = $(this).val();
+
+  if ($(this).attr('id') == 'inputlg-zip') {
+    url = '/weather?zip=' + encodeURIComponent(query);
+  } else {
+    url = '/weather?city=' + encodeURIComponent(query);
+  }
+
+  getData(url, query)
+}
+
+function setKeydownListeners(debouncedFunction) {
+  $('#inputlg-zip').keydown(debouncedFunction);
+  $('#inputlg-city').keydown(debouncedFunction);
+}
+
+function setLocationListener() {
+  $(document).on('click', '.location-title', function() {
+    fetchWeatherData(this)
+  });
 }
