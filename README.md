@@ -26,9 +26,9 @@ An application that retrieves current weather data by city and zipcode using the
   `bin/rake db:migrate`
 
 # Services (job queues, cache servers, search engines, etc.)
-  `This application utilizes ActiveSupport::Cache::FileStore for caching. All cache is stored under '/tmp/caching-dev.txt'`
+  This application utilizes ActiveSupport::Cache::FileStore for caching. All cache is stored under '/tmp/caching-dev.txt
 
-  `Additional documentation for FileStore can be found at [FileStore Documentation](https://api.rubyonrails.org/classes/ActiveSupport/Cache/FileStore.html)`
+  Additional documentation for FileStore can be found at [FileStore Documentation](https://api.rubyonrails.org/classes/ActiveSupport/Cache/FileStore.html)
 
 # Run App
   Run bundle to install all app dependencies:
