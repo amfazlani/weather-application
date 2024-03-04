@@ -27,21 +27,26 @@ describe WeatherGeocodeZipcodeService do
 
   describe '#perform' do
     let!(:success_response) { Net::HTTPSuccess.new(1.0, '200', 'OK') }
-    let!(:error_response) { Net::HTTPUnauthorized.new(1.0, '500', 'OK') }
+    let!(:unauth_error_response) { Net::HTTPUnauthorized.new(1.0, '500', 'OK') }
+    let!(:not_found_error_response) { Net::HTTPNotFound.new(1.0, '500', 'OK') }
+    let!(:other_error) { Net::HTTPBadRequest.new(1.0, '500', 'OK') }
     let!(:data) { { "lat" => lat, "lon" => lon } }
 
      it 'calls OpenWetherAPI with correct arguments with zipcode' do
       # This prevents the elusive "undefined method `close' for nil:NilClass" error.
-      expect(success_response).to receive(:body).once { { lat: lat, lon: lon }.to_json }      
+      expect(success_response).to receive(:body).once { { lat: lat, lon: lon }.to_json }
 
+      # Stub API request in test and return mock response.
       expect(Net::HTTP).to receive(:get_response).once.with(URI(zip_url)).and_return(success_response)
 
       subject.perform
     end
 
     it 'sets the correct data' do
+      # This prevents the elusive "undefined method `close' for nil:NilClass" error.
       allow(success_response).to receive(:body).once { { lat: lat, lon: lon }.to_json }      
 
+      # Stub API request in test and return mock response.
       allow(Net::HTTP).to receive(:get_response).once.with(URI(zip_url)).and_return(success_response)
 
       subject.perform
@@ -49,10 +54,30 @@ describe WeatherGeocodeZipcodeService do
       expect(subject.data).to eq(data)
     end
 
-    it 'raises OpenWeatherError if HTTPUnauthorized response' do
-      allow(Net::HTTP).to receive(:get_response).once.with(URI(zip_url)).and_return(error_response)
+    context 'when response contains error' do
+      it 'raises OpenWeatherError if HTTPUnauthorized response' do
+        # Stub API request in test and return mock error response.
+        allow(Net::HTTP).to receive(:get_response).once.with(URI(zip_url)).and_return(unauth_error_response)
 
-      expect{ subject.perform }.to raise_error(OpenWeatherError, 'Invalid API Key')
+        expect { subject.perform }.to raise_error(OpenWeatherError, 'Invalid API Key')
+      end
+
+      it 'raises OpenWeatherError if HTTPNotFound response' do
+        # Stub API request in test and return mock error response.
+        allow(Net::HTTP).to receive(:get_response).once.with(URI(zip_url)).and_return(not_found_error_response)
+
+        expect { subject.perform }.to raise_error(OpenWeatherError, 'Not Found')
+      end
+
+      it 'raises OpenWeatherError if other response' do
+        # Stub API request in test and return mock error response.
+        allow(Net::HTTP).to receive(:get_response).once.with(URI(zip_url)).and_return(other_error)
+
+        # This prevents the elusive "undefined method `close' for nil:NilClass" error.
+        allow(other_error).to receive(:body).once { {'message': 'Error Message'}.to_json }      
+
+        expect { subject.perform }.to raise_error(OpenWeatherError, 'Error Message')
+      end
     end
   end
 end

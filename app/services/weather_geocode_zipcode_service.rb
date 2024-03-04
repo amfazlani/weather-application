@@ -4,7 +4,7 @@ class WeatherGeocodeZipcodeService
   attr_reader :query, :data
 
   EXPIRATION_FOR_CACHE = 30.minute.freeze
-  API_SECRET = ENV['OPEN_WEATHER_API_KEY']
+  API_SECRET = ENV['OPEN_WEATHER_API_KEY'].freeze
 
   def initialize(options={})
     @query = options[:query]
@@ -29,9 +29,7 @@ class WeatherGeocodeZipcodeService
   def find_by_zipcode
     # api documentation can be found at https://openweathermap.org/api/geocoding-api
 
-    uri = URI("http://api.openweathermap.org/geo/1.0/zip?zip=#{query}&limit=1&appid=#{API_SECRET}")
-
-    Net::HTTP.get_response(uri)
+    Net::HTTP.get_response(api_url)
   end
 
   def handle_response(response)
@@ -48,7 +46,11 @@ class WeatherGeocodeZipcodeService
 
       raise OpenWeatherError.new('Not Found')
     else # handle other Net:HTTP errors outisde of authorization or not found
-       raise OpenWeatherError.new(JSON.parse(response.body)['message'])
+      raise OpenWeatherError.new(JSON.parse(response.body)['message'])
     end
+  end
+
+  def api_url
+    URI("http://api.openweathermap.org/geo/1.0/zip?zip=#{query}&limit=1&appid=#{API_SECRET}")
   end
 end
