@@ -30,12 +30,11 @@ $( document ).on('turbolinks:load', function() {
 })
 
 function getData(url, query) {
-
   fetch(url, {
-      method: 'GET',
-      headers: {
-          'Accept': 'application/json',
-      },
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+    },
   }).then(response => response.json()).then(json => {
     if (json && json['errors']) {
       window.showErrorToast(json['errors'])
@@ -89,17 +88,14 @@ function debounce(func, wait, immediate) {
 function fetchWeatherData(element) {
   let lat = element.dataset.lat
   let lon = element.dataset.lon
-
-  var url = `/weather/data?lat=${lat}&lon=${lon}`;
+  let url = `/weather/data?lat=${lat}&lon=${lon}`;
 
   fetch(url, {
     method: 'GET',
     headers: {
-        'Accept': 'application/json',
+      'Accept': 'application/json',
     },
-  })
-  .then(response => response.json())
-  .then(json => {
+  }).then(response => response.json()).then(json => {
     $('#weather-cards').empty()
 
     element = `<div class="card-body">
@@ -115,12 +111,10 @@ function fetchWeatherData(element) {
 
 function showErrorToast(error) {
   let toastEl = $('.toast')[0]
-
   let element = $('#weather-error-toaster-body')[0]
+  let toastInstance = Toast.getInstance(toastEl) // Returns a Bootstrap toast instance
 
   element.innerHTML = error
-
-  let toastInstance = Toast.getInstance(toastEl) // Returns a Bootstrap toast instance
 
   toastInstance.show();
 }

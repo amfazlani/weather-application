@@ -17,7 +17,7 @@ class WeatherGeocodeCityService
   private
 
   def fetch_coordinates
-    cache_key = "weather_data_#{query}"
+    cache_key = !Rails.env.test? ? "weather_data_#{query}" : Time.now.to_i
 
     @data = Rails.cache.fetch(cache_key, expires_in: EXPIRATION_FOR_CACHE) do
       handle_response(find_by_city)
@@ -27,7 +27,7 @@ class WeatherGeocodeCityService
   def find_by_city
     # api documentation can be found at https://openweathermap.org/api/geocoding-api
 
-    uri = URI("http://api.openweathermap.org/geo/1.0/direct?q=#{query}&limit=1&appid=#{API_SECRET}")
+    uri = URI("http://api.openweathermap.org/geo/1.0/direct?q=#{query}&limit=10&appid=#{API_SECRET}")
 
     Net::HTTP.get_response(uri)
   end
@@ -35,7 +35,7 @@ class WeatherGeocodeCityService
   def handle_response(response)
     case response
     when Net::HTTPSuccess
-      return JSON.parse(response.body)
+      return JSON.parse(response.body).uniq {|cord| cord['name']}
     when Net::HTTPUnauthorized # specifcally check for invalid authorization
       # log exception to error loggger (ie. Rollbar, etc) in production environment.
       # For right now raise api key error message.
