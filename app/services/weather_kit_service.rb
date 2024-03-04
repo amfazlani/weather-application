@@ -35,6 +35,7 @@ class WeatherKitService
 
   def find_by_coordinates
     # api documentation can be found at https://openweathermap.org/api/geocoding-api
+
     Net::HTTP.get_response(api_url)
   end
 

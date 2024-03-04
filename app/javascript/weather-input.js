@@ -6,6 +6,7 @@ $( document ).on('turbolinks:load', function() {
   setKeydownListeners(debounce(fetchLocationData, 500));
 
   window.showErrorToast = showErrorToast;
+  window.constructLocationElement = constructLocationElement
 })
 
 function getData(url, query) {
@@ -23,16 +24,11 @@ function getData(url, query) {
 
       if (Array.isArray(json)) {
         for (let i = 0; i < json.length; i++) {
-          let element = `<div class="card-body">
-          Location: <h5 class="card-title location-title" data-lat=${json[i].lat} data-lon=${json[i].lon}>${json[i].name}</h5>
-          </div>`
-
+          let element = window.constructLocationElement(json[i])
           element = $('#found-locations').append(element)
         }
       } else {
-        let element = `<div class="card-body">
-        Location: <h5 class="card-title location-title" data-lat=${json.lat} data-lon=${json.lon}>${json.name}</h5>
-        </div>`
+        let element = window.constructLocationElement(json)
 
         $('#found-locations').append(element)
       }
@@ -77,10 +73,19 @@ function fetchWeatherData(element) {
   }).then(response => response.json()).then(json => {
     $('#weather-cards').empty()
 
-    element = `<div class="card-body">
-      <h5 class="card-title">Current Temperature: ${json.main['temp']} degrees</h5>
-      <p class="card-text">Feels like ${json.main['feels_like']}</p>
+    element = `<div class="card weather-card">
+    <img src=${json['icon']} alt="weather icon" class="weather-icon">
+    <div class="card-body">
+      <h5 class="card-title">${json['data'].main['temp']} °F</h5>
+      <div class="weather-subdata">
+        <div> <span class="title">Feels Like:</span> <p class="value">${json['data'].main['feels_like']} °F</p> </div>
+        <div> <span class="title">Max:</span> <p class="value"> ${json['data'].main['temp_max']} °F</p></div>
+        <div> <span class="title">Min:</span> <p class="value"> ${json['data'].main['temp_min']} °F</p></div>
+      </div>
+    </div>
     </div>`
+
+    debugger
 
     $('#weather-cards').append(element)
   }).catch((error)=>{
@@ -109,6 +114,13 @@ function fetchLocationData() {
   let url;
   let query = $(this).val();
 
+  if (query == "") {
+    $('#found-locations').empty()
+    $('#weather-cards').empty()
+
+    return
+  }
+
   if ($(this).attr('id') == 'inputlg-zip') {
     url = '/weather?zip=' + encodeURIComponent(query);
   } else {
@@ -127,4 +139,16 @@ function setLocationListener() {
   $(document).on('click', '.location-title', function() {
     fetchWeatherData(this)
   });
+}
+
+function constructLocationElement(json) {
+  return `<div class="card-container col-sm-12 col-md-3 mb-2">
+            <div class="card location" style="width: 18rem;">
+              <i class="fa-solid fa-location-dot"></i>
+              <div class="card-body">
+                <h5 class="card-title">${json.name}</h5>
+                <button class="btn btn-primary location-title" data-lat=${json.lat} data-lon=${json.lon}>View Forcast Data</button>
+              </div>
+            </div>
+          </div>`
 }
