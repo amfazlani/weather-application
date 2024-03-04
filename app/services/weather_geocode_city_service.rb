@@ -1,4 +1,4 @@
-# This service is responsible for converting an address to lat/lon coordinates.
+# This service is responsible for converting a city name to lat/lon coordinates.
 
 class WeatherGeocodeCityService
   attr_reader :query, :data
@@ -12,6 +12,8 @@ class WeatherGeocodeCityService
 
   def perform
     fetch_coordinates
+  rescue StandardError => exception
+    raise OpenWeatherError.new(exception.message)
   end
 
   private
@@ -42,10 +44,11 @@ class WeatherGeocodeCityService
 
        raise OpenWeatherError.new('Invalid API Key')
     when Net::HTTPNotFound
-      # handle other Net:HTTP errors outisde of authorization
       # log exception to error loggger (ie. Rollbar, etc) in production environment.
+      # For right now raise not found error message.
       raise OpenWeatherError.new('Not Found')
     else
+       # handle other Net:HTTP errors outisde of authorization
        raise OpenWeatherError.new(JSON.parse(response.body)['message'])
     end
   end

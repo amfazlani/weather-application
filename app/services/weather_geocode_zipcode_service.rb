@@ -12,12 +12,14 @@ class WeatherGeocodeZipcodeService
 
   def perform
     fetch_coordinates
+  rescue StandardError => exception
+    raise OpenWeatherError.new(exception.message)
   end
 
   private
 
   def fetch_coordinates
-    cache_key = "weather_data_#{query}"
+    cache_key = !Rails.env.test? ? "weather_data_#{query}" : Time.now.to_i
 
     @data = Rails.cache.fetch(cache_key, expires_in: EXPIRATION_FOR_CACHE) do
       handle_response(find_by_zipcode)
@@ -42,10 +44,10 @@ class WeatherGeocodeZipcodeService
 
       raise OpenWeatherError.new('Invalid API Key')
     when Net::HTTPNotFound
-      # handle other Net:HTTP errors outisde of authorization
       # log exception to error loggger (ie. Rollbar, etc) in production environment.
+
       raise OpenWeatherError.new('Not Found')
-    else
+    else # handle other Net:HTTP errors outisde of authorization or not found
        raise OpenWeatherError.new(JSON.parse(response.body)['message'])
     end
   end

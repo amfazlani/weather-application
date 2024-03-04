@@ -40,9 +40,9 @@ describe WeatherGeocodeCityService do
     end
 
     it 'sets the correct data' do
-      allow(success_response).to receive(:body).once { [{ name: query, lat: lat, lon: lon }].to_json }      
+      expect(success_response).to receive(:body).once { [{ name: query, lat: lat, lon: lon }].to_json }      
 
-      allow(Net::HTTP).to receive(:get_response).once.with(URI(city_url)).and_return(success_response)
+      expect(Net::HTTP).to receive(:get_response).once.with(URI(city_url)).and_return(success_response)
 
       subject.perform
 

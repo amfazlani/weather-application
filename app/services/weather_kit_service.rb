@@ -12,6 +12,8 @@ class WeatherKitService
 
   def perform
     fetch_weather_data
+  rescue StandardError => exception
+    raise OpenWeatherError.new(exception.message)
   end
 
   def icon_url
@@ -23,34 +25,26 @@ class WeatherKitService
   private
 
   def fetch_weather_data
-    begin
-      cache_key = "weather_data_#{lat.to_s}_#{lon.to_s}"
+    cache_key = !Rails.env.test? ? "weather_data_#{lat.to_s}_#{lon.to_s}" : Time.now.to_i
 
-      weather_data = Rails.cache.fetch(cache_key, expires_in: EXPIRATION_FOR_CACHE) do
-        # api documentation can be found at https://openweathermap.org/api/geocoding-api
+    weather_data = Rails.cache.fetch(cache_key, expires_in: EXPIRATION_FOR_CACHE) do
+      # api documentation can be found at https://openweathermap.org/api/geocoding-api
+      uri = URI("https://api.openweathermap.org/data/2.5/weather?lat=#{lat}&lon=#{lon}&appid=#{ENV['OPEN_WEATHER_API_KEY']}&units=imperial")
 
-        uri = URI("https://api.openweathermap.org/data/2.5/weather?lat=#{lat}&lon=#{lon}&appid=#{ENV['OPEN_WEATHER_API_KEY']}&units=imperial")
+      response = Net::HTTP.get_response(uri)
 
-        response = Net::HTTP.get_response(uri)
+      case response
+      when Net::HTTPSuccess
+         @data = JSON.parse(response.body)
+      when Net::HTTPUnauthorized # specifcally check for invalid authorization
+        # log exception to error loggger (ie. Rollbar, etc) in production environment.
+        # For right now raise api key error message.
 
-        case response
-        when Net::HTTPSuccess
-           @data = JSON.parse(response.body)
-        when Net::HTTPUnauthorized # specifcally check for invalid authorization
-          # log exception to error loggger (ie. Rollbar, etc) in production environment.
-          # For right now raise api key error message.
+        raise 'Invalid API Key'
+      else 
+        # log exception to error loggger (ie. Rollbar, etc) in production environment.
 
-          raise 'Invalid API Key'
-        else 
-          # handle other Net:HTTP errors outisde of authorization
-          # log exception to error loggger (ie. Rollbar, etc) in production environment.
-          raise OpenWeatherError.new(JSON.parse(response)['message'])
-        end
-      rescue StandardError => exception
-        # log exception to error loggger (ie. Rollbar, etc) in a production environment.
-        # For right now raise exception
-
-        raise OpenWeatherError.new(exception.message)
+        raise JSON.parse(response)['message']
       end
     end
   end
