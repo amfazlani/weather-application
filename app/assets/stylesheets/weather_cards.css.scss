@@ -29,11 +29,18 @@
   }
 
   #weather-cards {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
     .weather-card {
       padding: 20px;
       display: flex;
       flex-direction: row;
       align-items: center;
+      width: 37em;
+      border-radius: 16px;
+      background: #d3d3d338;
 
       .weather-icon {
         width: 100px;
