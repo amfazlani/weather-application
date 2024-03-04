@@ -82,7 +82,7 @@ function fetchWeatherData(element) {
   }).then(response => response.json()).then(json => {
     $('#weather-cards').empty()
 
-    element = `<div class="card-container">
+    element = `<div class="card-container col-sm-12">
                  <div class="card weather-card">
                    <div class="main-body">
                      <img src=${json['icon']} alt="weather icon" class="weather-icon">

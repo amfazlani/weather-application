@@ -1,4 +1,10 @@
 #weather-info {
+  .card-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .location.card {
     border-radius: 20px;
     background-color: #6495ED;
