@@ -146,7 +146,7 @@ function constructLocationElement(json) {
             <div class="card location" style="width: 18rem;">
               <i class="fa-solid fa-location-dot"></i>
               <div class="card-body">
-                <h5 class="card-title">${json.name}</h5>
+                <h5 class="card-title">${json.name}, ${json.state}, ${json.country}</h5>
                 <button class="btn btn-primary location-title" data-lat=${json.lat} data-lon=${json.lon}>View Forcast Data</button>
               </div>
             </div>
