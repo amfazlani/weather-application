@@ -29,7 +29,9 @@ class WeatherKitService
     cache_key = !Rails.env.test? ? "weather_data_#{lat.to_s}_#{lon.to_s}" : Time.now.to_i
 
     @data = Rails.cache.fetch(cache_key, expires_in: EXPIRATION_FOR_CACHE) do
-      handle_response(find_by_coordinates)
+      response = handle_response(find_by_coordinates)
+
+      response.merge('expires_at' => time_to_expiration)
     end
   end
 
@@ -61,5 +63,9 @@ class WeatherKitService
 
   def api_url
     URI("https://api.openweathermap.org/data/2.5/weather?lat=#{lat}&lon=#{lon}&appid=#{API_SECRET}&units=imperial")
+  end
+
+  def time_to_expiration
+    Time.now + EXPIRATION_FOR_CACHE
   end
 end

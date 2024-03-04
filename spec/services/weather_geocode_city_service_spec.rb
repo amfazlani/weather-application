@@ -30,7 +30,8 @@ describe WeatherGeocodeCityService do
     let!(:unauth_error_response) { Net::HTTPUnauthorized.new(1.0, '500', 'OK') }
     let!(:not_found_error_response) { Net::HTTPNotFound.new(1.0, '500', 'OK') }
     let!(:other_error) { Net::HTTPBadRequest.new(1.0, '500', 'OK') }
-    let!(:data) { [{ "name" => query, "lat" => lat, "lon" => lon }] }
+    let!(:expires_at) { Time.now + 30.minutes.to_i }
+    let!(:data) { [{ "name" => query, "lat" => lat, "lon" => lon, "expires_at" => expires_at }] }
 
     it 'calls OpenWetherAPI with correct arguments with zipcode' do
       # This prevents the elusive "undefined method `close' for nil:NilClass" error.
@@ -43,6 +44,9 @@ describe WeatherGeocodeCityService do
     end
 
     it 'sets the correct data' do
+      # Stub time to expiration to prevent timestamp causing a mismatch.
+      allow(subject).to receive(:time_to_expiration).once { expires_at }
+
       # This prevents the elusive "undefined method `close' for nil:NilClass" error.
       expect(success_response).to receive(:body).once { [{ name: query, lat: lat, lon: lon }].to_json }      
 

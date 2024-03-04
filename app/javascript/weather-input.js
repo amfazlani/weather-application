@@ -6,6 +6,7 @@ $( document ).on('turbolinks:load', function() {
   setKeydownListeners(debounce(fetchLocationData, 500));
 
   window.showErrorToast = showErrorToast;
+  window.showSuccessToast = showSuccessToast;
   window.constructLocationElement = constructLocationElement
 })
 
@@ -32,6 +33,14 @@ function getData(url, query) {
 
         $('#found-locations').append(element)
       }
+
+      if (Array.isArray(json) && !json.length) {
+        window.showSuccessToast('No Results Found')
+
+        return
+      }
+
+      window.showSuccessToast('Results Found')
     }
   }).catch(() => {
     window.showErrorToast('Oops something went wrong!')
@@ -73,20 +82,22 @@ function fetchWeatherData(element) {
   }).then(response => response.json()).then(json => {
     $('#weather-cards').empty()
 
-    element = `<div class="card-container col-sm-12 col-md-3 mb-2">
-    <div class="card weather-card">
-    <img src=${json['icon']} alt="weather icon" class="weather-icon">
-    <div class="card-body">
-      <h5 class="card-title">${json['data'].main['temp']} °F</h5>
-      <div class="weather-subdata">
-        <div> <span class="title">Feels Like:</span> <p class="value">${json['data'].main['feels_like']} °F</p> </div>
-        <div> <span class="title">Max:</span> <p class="value"> ${json['data'].main['temp_max']} °F</p></div>
-        <div> <span class="title">Min:</span> <p class="value"> ${json['data'].main['temp_min']} °F</p></div>
-      </div>
-    </div>
-    </div>`
-
-    debugger
+    element = `<div class="card-container">
+                 <div class="card weather-card">
+                   <div class="main-body">
+                     <img src=${json['icon']} alt="weather icon" class="weather-icon">
+                     <div class="card-body">
+                       <h5 class="card-title">${json['data'].main['temp']} °F</h5>
+                       <div class="weather-subdata">
+                         <div> <span class="title">Feels Like:</span> <p class="value">${json['data'].main['feels_like']} °F</p> </div>
+                         <div> <span class="title">Max:</span> <p class="value"> ${json['data'].main['temp_max']} °F</p></div>
+                         <div> <span class="title">Min:</span> <p class="value"> ${json['data'].main['temp_min']} °F</p></div>
+                       </div>
+                     </div>
+                   </div>
+                   <p class="cache-text"> Cached: Expires at ${new Date(json['data'].expires_at)} </p>
+                 </div>
+               </div>`
 
     $('#weather-cards').append(element)
   }).catch((error)=>{
@@ -96,10 +107,24 @@ function fetchWeatherData(element) {
 
 function showErrorToast(error) {
   let toastEl = $('.toast')[0];
-  let element = $('#weather-error-toaster-body')[0];
+  let element = $('#weather-toaster-body')[0];
   let toastInstance = Toast.getInstance(toastEl); // Returns a Bootstrap toast instance
 
   element.innerHTML = error
+  element.classList.remove('bg-success')
+  element.classList.add('bg-danger')
+
+  toastInstance.show();
+}
+
+function showSuccessToast(success) {
+  let toastEl = $('.toast')[0];
+  let element = $('#weather-toaster-body')[0];
+  let toastInstance = Toast.getInstance(toastEl); // Returns a Bootstrap toast instance
+
+  element.innerHTML = success
+  element.classList.remove('bg-danger')
+  element.classList.add('bg-success')
 
   toastInstance.show();
 }
@@ -150,6 +175,7 @@ function constructLocationElement(json) {
                 <h5 class="card-title">${[json.name, json.state, json.country].join(', ')}</h5>
                 <button class="btn btn-primary location-title" data-lat=${json.lat} data-lon=${json.lon}>View Forcast Data</button>
               </div>
+              <p class="cache-text"> Cached: Expires at ${new Date(json.expires_at)} </p>
             </div>
           </div>`
 }

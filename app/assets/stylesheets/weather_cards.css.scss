@@ -36,12 +36,17 @@
 
     .weather-card {
       padding: 20px;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
       width: 37em;
       border-radius: 16px;
       background: #d3d3d338;
+
+      .main-body {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+      }
 
       .weather-icon {
         width: 100px;
@@ -74,6 +79,11 @@
         }
       }
     }
+  }
+
+  .cache-text {
+    font-size: 13px;
+    text-align: center;
   }
 }
 

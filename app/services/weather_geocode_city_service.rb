@@ -19,10 +19,12 @@ class WeatherGeocodeCityService
   private
 
   def fetch_coordinates
-    cache_key = !Rails.env.test? ? "weather_data_#{query}" : Time.now.to_i
+    cache_key = !Rails.env.test? ? "weather_data_city_#{query}" : Time.now.to_i
 
     @data = Rails.cache.fetch(cache_key, expires_in: EXPIRATION_FOR_CACHE) do
-      handle_response(find_by_city)
+      response = handle_response(find_by_city)
+
+      response.map { |x| x.merge('expires_at' => time_to_expiration) }
     end
   end
 
@@ -55,5 +57,9 @@ class WeatherGeocodeCityService
 
   def api_url
     URI("http://api.openweathermap.org/geo/1.0/direct?q=#{query}&limit=10&appid=#{API_SECRET}")
+  end
+
+  def time_to_expiration
+    Time.now + EXPIRATION_FOR_CACHE
   end
 end

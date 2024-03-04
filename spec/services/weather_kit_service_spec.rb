@@ -34,6 +34,8 @@ describe WeatherKitService do
     let!(:not_found_error_response) { Net::HTTPNotFound.new(1.0, '500', 'OK') }
     let!(:other_error) { Net::HTTPBadRequest.new(1.0, '500', 'OK') }
     let!(:data) { file_fixture("weather_data.json").read }
+    let!(:expires_at) { Time.now + 30.minutes }
+    let!(:data_with_expires_at) { JSON.parse(data).merge("expires_at" => expires_at) }
 
     it 'calls OpenWetherAPI with correct arguments with zipcode' do
       # This prevents the elusive "undefined method `close' for nil:NilClass" error.
@@ -46,6 +48,9 @@ describe WeatherKitService do
     end
 
     it 'sets the correct data' do
+      # Stub time to expiration to prevent timestamp causing a mismatch.
+      allow(subject).to receive(:time_to_expiration).once { expires_at }
+
       # This prevents the elusive "undefined method `close' for nil:NilClass" error.
       allow(success_response).to receive(:body).once { data }      
 
@@ -54,7 +59,7 @@ describe WeatherKitService do
 
       subject.perform
 
-      expect(subject.data).to eq(JSON.parse(data))
+      expect(subject.data).to eq(data_with_expires_at)
     end
 
     context 'response contains errors' do

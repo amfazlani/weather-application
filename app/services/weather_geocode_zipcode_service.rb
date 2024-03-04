@@ -19,10 +19,10 @@ class WeatherGeocodeZipcodeService
   private
 
   def fetch_coordinates
-    cache_key = !Rails.env.test? ? "weather_data_#{query}" : Time.now.to_i
+    cache_key = !Rails.env.test? ? "weather_data_zip_#{query}" : Time.now.to_i
 
     @data = Rails.cache.fetch(cache_key, expires_in: EXPIRATION_FOR_CACHE) do
-      handle_response(find_by_zipcode)
+      handle_response(find_by_zipcode).merge('expires_at' => time_to_expiration)
     end
   end
 
@@ -52,5 +52,9 @@ class WeatherGeocodeZipcodeService
 
   def api_url
     URI("http://api.openweathermap.org/geo/1.0/zip?zip=#{query}&limit=1&appid=#{API_SECRET}")
+  end
+
+  def time_to_expiration
+    Time.now + EXPIRATION_FOR_CACHE
   end
 end
