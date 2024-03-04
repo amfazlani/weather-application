@@ -40,6 +40,9 @@ function getData(url, query) {
     if (json && json['errors']) {
       window.showErrorToast(json['errors'])
     } else {
+      $('#found-locations').empty()
+      $('#weather-cards').empty()
+
       if (Array.isArray(json)) {
         for (let i = 0; i < json.length; i++) {
           let element = `<div class="card-body">
@@ -97,6 +100,8 @@ function fetchWeatherData(element) {
   })
   .then(response => response.json())
   .then(json => {
+    $('#weather-cards').empty()
+
     element = `<div class="card-body">
       <h5 class="card-title">Current Temperature: ${json.main['temp']} degrees</h5>
       <p class="card-text">Feels like ${json.main['feels_like']}</p>
