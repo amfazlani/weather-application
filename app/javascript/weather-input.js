@@ -35,7 +35,7 @@ function getData(url, query) {
       }
 
       if (Array.isArray(json) && !json.length) {
-        window.showSuccessToast('No Results Found')
+        window.showErrorToast('No Results Found')
 
         return
       }
